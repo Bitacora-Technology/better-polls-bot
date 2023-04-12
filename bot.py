@@ -6,7 +6,7 @@ from cogs.utils import files
 import config
 
 description = """
-This is the template used by Bitacora.gg to develop Discord bots.
+This is a bot focused in creating polls.
 """
 
 log = logging.getLogger(__name__)
