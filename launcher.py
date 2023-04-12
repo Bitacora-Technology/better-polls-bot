@@ -9,7 +9,7 @@ from setproctitle import setproctitle
 from logging.handlers import RotatingFileHandler
 
 
-setproctitle('discord-bot-template')
+setproctitle('better-polls-bot')
 
 
 class RemoveNoise(logging.Filter):
