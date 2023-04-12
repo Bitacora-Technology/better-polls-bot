@@ -18,6 +18,7 @@ class Bot(commands.Bot):
     def __init__(self):
         allowed_mentions = discord.AllowedMentions.all()
         intents = discord.Intents.default()
+        intents.message_content = True
         super().__init__(
             command_prefix=config.prefix,
             allowed_mentions=allowed_mentions,
