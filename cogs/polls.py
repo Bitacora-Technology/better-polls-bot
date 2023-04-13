@@ -182,6 +182,7 @@ class Polls(commands.Cog):
         self.bot = bot
 
     @app_commands.command()
+    @app_commands.default_permissions(administrator=True)
     async def create(
         self,
         interaction: discord.Interaction,
@@ -190,6 +191,16 @@ class Polls(commands.Cog):
         """Create a poll"""
         modal = CreatePollModal(channel)
         await interaction.response.send_modal(modal)
+
+    @app_commands.command()
+    async def invite(self, interaction: discord.Interaction) -> None:
+        """Get the bot invite"""
+        content = (
+            'https://discord.com/api/oauth2/authorize?client_id='
+            '1095770756413145239&permissions=8&scope=bot%'
+            '20applications.commands'
+        )
+        await interaction.response.send_message(content, ephemeral=True)
 
 
 async def setup(bot: Bot) -> None:
