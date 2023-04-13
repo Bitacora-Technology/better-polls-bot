@@ -5,11 +5,13 @@ import discord
 from bot import Bot
 
 
-def poll_embed(info: dict) -> discord.Embed:
-    embed = discord.Embed(title=info['question'], color=0)
-    for choice in info['choices']:
-        embed.add_field(name=choice, value='Test', inline=False)
-    return embed
+class PollEmbed:
+    def __init__(self, info: dict) -> None:
+        self.info = info
+
+    def build(self) -> discord.Embed:
+        self.embed = discord.Embed(title=self.info['question'], color=0)
+        return self.embed
 
 
 class CreatePollModal(discord.ui.Modal):
@@ -30,7 +32,6 @@ class CreatePollModal(discord.ui.Modal):
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
         poll_info = {
-            'channel': self.channel,
             'question': self.question.value,
             'choices': {},
         }
@@ -45,8 +46,19 @@ class CreatePollModal(discord.ui.Modal):
 
             poll_info['choices'][name] = []
 
-        embed = poll_embed(poll_info)
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        if len(poll_info['choices']) < 2:
+            content = 'Not enough options'
+            embed = None
+        elif len(poll_info['choices']) > 25:
+            content = 'Too many options'
+            embed = None
+        else:
+            content = f'Poll sent to {self.channel.mention}'
+            embed = PollEmbed(poll_info).build()
+
+        if embed:
+            await self.channel.send(embed=embed)
+        await interaction.response.send_message(content, ephemeral=True)
 
 
 class Polls(commands.Cog):
