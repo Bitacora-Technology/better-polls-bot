@@ -2,6 +2,7 @@ from discord.ext import commands
 from discord import app_commands
 import discord
 
+from cogs.utils import mongo
 from bot import Bot
 
 
@@ -59,6 +60,37 @@ class VotePollButton(discord.ui.Button):
     def __init__(self, count: int) -> None:
         super().__init__(label=count, style=discord.ButtonStyle.primary)
 
+    async def callback(self, interaction: discord.Interaction) -> None:
+        await interaction.response.defer(thinking=True, ephemeral=True)
+
+        message = interaction.message
+        user = interaction.user
+
+        poll = mongo.Poll(message.id)
+        poll_info = await poll.check()
+
+        choices = poll_info['choices']
+
+        vote_list = [n for n, v in choices.items()]
+        vote = vote_list[int(self.label) - 1]
+
+        user_list = choices[vote]
+
+        if user.id in user_list:
+            content = 'You have already voted'
+            await interaction.followup.send(content)
+            return
+
+        user_list.append(user.id)
+        await poll.update({f'choices.{vote}': user_list})
+
+        poll_info = await poll.check()
+        embed = PollEmbed(poll_info).build()
+        await interaction.message.edit(embed=embed)
+
+        content = 'Your vote has been received'
+        await interaction.followup.send(content)
+
 
 class VotePollView(discord.ui.View):
     def __init__(self, choices: list) -> Bot:
@@ -113,7 +145,11 @@ class CreatePollModal(discord.ui.Modal):
 
         if embed:
             view = VotePollView(choices)
-            await self.channel.send(embed=embed, view=view)
+            message = await self.channel.send(embed=embed, view=view)
+
+            poll_info['_id'] = message.id
+            await mongo.Poll().create(poll_info)
+
         await interaction.response.send_message(content, ephemeral=True)
 
 
