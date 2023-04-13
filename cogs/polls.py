@@ -9,8 +9,44 @@ class PollEmbed:
     def __init__(self, info: dict) -> None:
         self.info = info
 
+    def get_progress_bar(self, length: int) -> str:
+        progress_bar = ''
+
+        try:
+            percentage = round((length / self.total_votes) * 100, 2)
+        except Exception:
+            percentage = 0
+
+        if percentage > 0:
+            progress_bar += '`'
+            progress_bar += ' ' * int(percentage)
+            progress_bar += '` '
+
+        progress_bar += f'{percentage}%'
+
+        return progress_bar
+
+    def add_embed_field(self, name: str, value: list) -> None:
+        progress_bar = self.get_progress_bar(len(value))
+        self.embed.add_field(name=name, value=progress_bar, inline=False)
+
+    def calculate_total_votes(self) -> None:
+        self.total_votes = 0
+        for name, value in self.info['choices'].items():
+            self.total_votes += len(value)
+
     def build(self) -> discord.Embed:
-        self.embed = discord.Embed(title=self.info['question'], color=0)
+        self.calculate_total_votes()
+
+        self.embed = discord.Embed(
+            title=self.info['question'],
+            description=f'Total votes: {self.total_votes}',
+            color=0
+        )
+
+        for name, value in self.info['choices'].items():
+            self.add_embed_field(name, value)
+
         return self.embed
 
 
