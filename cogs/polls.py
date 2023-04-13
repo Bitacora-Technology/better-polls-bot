@@ -9,23 +9,42 @@ from bot import Bot
 class PollEmbed:
     def __init__(self, info: dict) -> None:
         self.info = info
+        self.emojis = {
+            '100': '<:100p:1096059911865114807>',
+            '80': '<:80p:1096059910594236556>',
+            '60': '<:60p:1096059908518056017>',
+            '40': '<:40p:1096059906362191925>',
+            '20': '<:20p:1096059903719776427>',
+            '0': '<:0p:1096060707994353724>'
+        }
 
     def get_progress_bar(self, length: int) -> str:
-        progress_bar = ''
+        progress_bar = []
 
         try:
-            percentage = round((length / self.total_votes) * 100, 2)
+            percentage = (length / self.total_votes) * 100
         except Exception:
             percentage = 0
 
         if percentage > 0:
-            progress_bar += '`'
-            progress_bar += ' ' * int(percentage)
-            progress_bar += '` '
+            full_count = int(percentage / 10)
+            for _ in range(full_count):
+                progress_bar.append(self.emojis['100'])
 
-        progress_bar += f'{percentage}%'
+            remainder = percentage % 10
+            if remainder >= 8:
+                progress_bar.append(self.emojis['80'])
+            elif remainder >= 6:
+                progress_bar.append(self.emojis['60'])
+            elif remainder >= 4:
+                progress_bar.append(self.emojis['40'])
+            elif remainder >= 2:
+                progress_bar.append(self.emojis['20'])
 
-        return progress_bar
+        progress_bar.append(self.emojis['0'] * (11 - len(progress_bar)))
+        progress_bar.append(f'{round(percentage, 2)}%')
+
+        return ''.join(progress_bar)
 
     def add_embed_field(self, name: str, value: list) -> None:
         choice_name = f'{self.count}. {name}'
@@ -71,15 +90,20 @@ class VotePollButton(discord.ui.Button):
 
         choices = poll_info['choices']
 
+        voted = False
+        for name, value in choices.items():
+            if user.id in value:
+                voted = True
+
+        if voted:
+            content = 'You have already voted'
+            await interaction.followup.send(content)
+            return
+
         vote_list = [n for n, v in choices.items()]
         vote = vote_list[int(self.label) - 1]
 
         user_list = choices[vote]
-
-        if user.id in user_list:
-            content = 'You have already voted'
-            await interaction.followup.send(content)
-            return
 
         user_list.append(user.id)
         await poll.update({f'choices.{vote}': user_list})
