@@ -32,11 +32,11 @@ def setup_logging():
     try:
         discord.utils.setup_logging()
         max_bytes = 32 * 1024 * 1024  # 32 MiB
-        logging.getLogger('discord').setLevel(logging.INFO)
+        logging.getLogger('discord').setLevel(logging.ERROR)
         logging.getLogger('discord.http').setLevel(logging.WARNING)
         logging.getLogger('discord.state').addFilter(RemoveNoise())
 
-        log.setLevel(logging.INFO)
+        log.setLevel(logging.ERROR)
         handler = RotatingFileHandler(
             filename='discord.log',
             encoding='utf-8',
