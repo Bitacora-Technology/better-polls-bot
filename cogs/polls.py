@@ -27,8 +27,11 @@ class PollEmbed:
         return progress_bar
 
     def add_embed_field(self, name: str, value: list) -> None:
+        choice_name = f'{self.count}. {name}'
         progress_bar = self.get_progress_bar(len(value))
-        self.embed.add_field(name=name, value=progress_bar, inline=False)
+        self.embed.add_field(
+            name=choice_name, value=progress_bar, inline=False
+        )
 
     def calculate_total_votes(self) -> None:
         self.total_votes = 0
@@ -44,10 +47,24 @@ class PollEmbed:
             color=0
         )
 
+        self.count = 1
         for name, value in self.info['choices'].items():
             self.add_embed_field(name, value)
+            self.count += 1
 
         return self.embed
+
+
+class VotePollButton(discord.ui.Button):
+    def __init__(self, count: int) -> None:
+        super().__init__(label=count, style=discord.ButtonStyle.primary)
+
+
+class VotePollView(discord.ui.View):
+    def __init__(self, choices: list) -> Bot:
+        super().__init__(timeout=None)
+        for count in range(1, len(choices) + 1):
+            self.add_item(VotePollButton(count))
 
 
 class CreatePollModal(discord.ui.Modal):
@@ -82,10 +99,12 @@ class CreatePollModal(discord.ui.Modal):
 
             poll_info['choices'][name] = []
 
-        if len(poll_info['choices']) < 2:
+        choices = poll_info['choices']
+
+        if len(choices) < 2:
             content = 'Not enough options'
             embed = None
-        elif len(poll_info['choices']) > 25:
+        elif len(choices) > 25:
             content = 'Too many options'
             embed = None
         else:
@@ -93,7 +112,8 @@ class CreatePollModal(discord.ui.Modal):
             embed = PollEmbed(poll_info).build()
 
         if embed:
-            await self.channel.send(embed=embed)
+            view = VotePollView(choices)
+            await self.channel.send(embed=embed, view=view)
         await interaction.response.send_message(content, ephemeral=True)
 
 
