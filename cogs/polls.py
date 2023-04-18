@@ -149,7 +149,7 @@ class CreatePollModal(discord.ui.Modal):
             if not choice.startswith('-'):
                 continue
 
-            name = choice[1:]
+            name = choice[1:].replace('.', '')
             if name in poll_info['choices']:
                 continue
 
